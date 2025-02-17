@@ -4,6 +4,7 @@ import contract from "./contract";
 const App = () => {
   const [userId, setUserId] = useState("");
   const [fileHash, setFileHash] = useState("");
+  const [account, setAccount] = useState(null); // State to track connected wallet
 
   const fetchFileHash = async () => {
     try {
@@ -16,25 +17,27 @@ const App = () => {
 
   const uploadFileHash = async () => {
     try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const sender = accounts[0];
+      if (!account) {
+        alert("Please connect your wallet first!");
+        return;
+      }
 
       await contract.methods
         .uploadFileHash(userId, fileHash)
-        .send({ from: sender });
+        .send({ from: account });
       alert("File Hash Uploaded!");
     } catch (error) {
       console.error("Error uploading file hash:", error);
     }
   };
+
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
+        setAccount(accounts[0]); // Set connected account
         console.log("Connected Account:", accounts[0]);
       } catch (error) {
         console.error("Error connecting wallet:", error);
@@ -44,42 +47,32 @@ const App = () => {
     }
   };
 
-  // return (
-  //   <div className="p-4">
-  //     <h2 className="font-bold text-xl">Get File Hash</h2>
-  //     <input
-  //       type="text"
-  //       value={userId}
-  //       onChange={(e) => setUserId(e.target.value)}
-  //       placeholder="Enter User ID"
-  //       className="m-2 p-2 border"
-  //     />
-  //     <button
-  //       onClick={fetchFileHash}
-  //       className="bg-blue-500 p-2 text-white"
-  //     >
-  //       Fetch File Hash
-  //     </button>
-  //     {fileHash && <p className="mt-2">File Hash: {fileHash}</p>}
-  //     <button
-  //       onClick={connectWallet}
-  //       className="bg-green-500 p-2 text-white"
-  //     >
-  //       Connect Wallet
-  //     </button>
-  //   </div>
-  // );
+  const disconnectWallet = () => {
+    setAccount(null); // Clear the account state
+    console.log("Wallet disconnected");
+  };
+
   return (
     <div className="p-4">
       <h2 className="font-bold text-xl">File Hash Manager</h2>
 
-      {/* Connect Wallet */}
-      <button
-        onClick={connectWallet}
-        className="bg-green-500 p-2 text-white"
-      >
-        Connect Wallet
-      </button>
+      {/* Connect/Disconnect Wallet */}
+      {account ? (
+        <button
+          onClick={disconnectWallet}
+          className="bg-red-500 p-2 text-white"
+        >
+          Disconnect Wallet
+        </button>
+      ) : (
+        <button
+          onClick={connectWallet}
+          className="bg-green-500 p-2 text-white"
+        >
+          Connect Wallet
+        </button>
+      )}
+      {account && <p className="mt-2">Connected: {account}</p>}
 
       {/* Fetch File Hash */}
       <div className="mt-4">
