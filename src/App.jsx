@@ -1,120 +1,188 @@
-import { useState } from "react";
-import contract from "./contract";
+import { useEffect, useState, useCallback } from "react";
+import { formatEther } from "ethers";
+import { BrowserProvider } from "ethers";
 
 const App = () => {
-  const [userId, setUserId] = useState("");
-  const [fileHash, setFileHash] = useState("");
-  const [account, setAccount] = useState(null); // State to track connected wallet
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [account, setAccount] = useState("");
+  const [balance, setBalance] = useState("");
 
-  const fetchFileHash = async () => {
-    try {
-      const hash = await contract.methods.getFileHash(userId).call();
-      setFileHash(hash);
-    } catch (error) {
-      console.error("Error fetching file hash:", error);
-    }
-  };
-
-  const uploadFileHash = async () => {
-    try {
-      if (!account) {
-        alert("Please connect your wallet first!");
-        return;
-      }
-
-      await contract.methods
-        .uploadFileHash(userId, fileHash)
-        .send({ from: account });
-      alert("File Hash Uploaded!");
-    } catch (error) {
-      console.error("Error uploading file hash:", error);
-    }
-  };
-
-  const connectWallet = async () => {
+  useEffect(() => {
     if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        setAccount(accounts[0]); // Set connected account
-        console.log("Connected Account:", accounts[0]);
-      } catch (error) {
-        console.error("Error connecting wallet:", error);
-      }
+      const initializeProvider = async () => {
+        try {
+          const newProvider = new BrowserProvider(window.ethereum);
+          setProvider(newProvider);
+
+          const signerInstance = await newProvider.getSigner();
+          setSigner(signerInstance);
+
+          const accounts = await newProvider.listAccounts();
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            updateBalance(accounts[0], newProvider);
+          }
+        } catch (error) {
+          console.error("Provider Initialization Error:", error);
+        }
+      };
+
+      initializeProvider();
     } else {
-      alert("MetaMask not found. Please install it.");
+      console.error("MetaMask not found.");
     }
-  };
+  }, []);
+
+  const updateBalance = useCallback(async (accountAddress, providerInstance) => {
+    if (!providerInstance) return;
+
+    try {
+      const balance = await providerInstance.getBalance(accountAddress);
+      setBalance(formatEther(balance));
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  }, []);
+
+  const connectWallet = useCallback(async () => {
+    if (!provider || !window.ethereum) return;
+
+    try {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      if (accounts.length > 0) {
+        setAccount(accounts[0].toString());
+        updateBalance(accounts[0], provider);
+      }
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      alert("Failed to connect wallet. Please try again.");
+    }
+  }, [provider, updateBalance]);
 
   const disconnectWallet = () => {
-    setAccount(null); // Clear the account state
+    setAccount("");
+    setBalance("");
     console.log("Wallet disconnected");
   };
 
+  const switchNetwork = useCallback(async (network) => {
+    if (!window.ethereum) return;
+
+    const networks = {
+      "ethereum-mainnet": {
+        chainId: "0x1",
+        rpcUrls: ["https://mainnet.infura.io/v3/4abd0512745244c995d31aad9685535c"],
+        chainName: "Ethereum Mainnet",
+        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+        blockExplorerUrls: ["https://etherscan.io"],
+      },
+      "sepolia-testnet": {
+        chainId: "0xaa36a7",
+        rpcUrls: ["https://sepolia.infura.io/v3/4abd0512745244c995d31aad9685535c"],
+        chainName: "Sepolia Testnet",
+        nativeCurrency: { name: "SepoliaETH", symbol: "SepETH", decimals: 18 },
+        blockExplorerUrls: ["https://sepolia.etherscan.io"],
+      },
+      "binance-testnet": {
+        chainId: "0x61",
+        rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+        chainName: "Binance Smart Chain Testnet",
+        nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+        blockExplorerUrls: ["https://testnet.bscscan.com"],
+      },
+      "binance-mainnet": {
+        chainId: "0x38",
+        rpcUrls: ["https://bsc-dataseed.binance.org/"],
+        chainName: "Binance Smart Chain Mainnet",
+        nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+        blockExplorerUrls: ["https://bscscan.com"],
+      },
+    };
+
+    if (!networks[network]) {
+      alert("Invalid network selected.");
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [networks[network]],
+      });
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+        updateBalance(accounts[0], provider);
+      }
+    } catch (error) {
+      console.error("Error switching network:", error);
+      alert("Failed to switch network. Please try again.");
+    }
+  }, [provider, updateBalance]);
+
+  const showCurrentAccount = useCallback(async () => {
+    if (!provider) return;
+
+    try {
+      const accounts = await provider.listAccounts();
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+        updateBalance(accounts[0], provider);
+      } else {
+        alert("No account connected.");
+      }
+    } catch (error) {
+      console.error("Error fetching current account:", error);
+    }
+  }, [provider, updateBalance]);
+
   return (
     <div className="p-4">
-      <h2 className="font-bold text-xl">File Hash Manager</h2>
+      <h1 className="font-bold text-xl">Wallet Integration</h1>
 
-      {/* Connect/Disconnect Wallet */}
       {account ? (
-        <button
-          onClick={disconnectWallet}
-          className="bg-red-500 p-2 text-white"
-        >
+        <button onClick={disconnectWallet} className="bg-red-500 p-2 text-white">
           Disconnect Wallet
         </button>
       ) : (
-        <button
-          onClick={connectWallet}
-          className="bg-green-500 p-2 text-white"
-        >
+        <button onClick={connectWallet} className="bg-green-500 p-2 text-white">
           Connect Wallet
         </button>
       )}
-      {account && <p className="mt-2">Connected: {account}</p>}
 
-      {/* Fetch File Hash */}
-      <div className="mt-4">
-        <h3 className="font-bold">Fetch File Hash</h3>
-        <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="Enter User ID"
-          className="m-2 p-2 border"
-        />
-        <button
-          onClick={fetchFileHash}
-          className="bg-blue-500 p-2 text-white"
-        >
-          Fetch File Hash
+      {account && typeof account === "string" && (
+        <div className="mt-2">
+          <p>Connected Account: {account}</p>
+          <p>Balance: {balance} ETH</p>
+        </div>
+      )}
+
+      <div className="space-x-2 mt-4">
+        <button onClick={() => switchNetwork("ethereum-mainnet")} className="bg-blue-500 p-2 text-white">
+          Switch to Ethereum Mainnet
         </button>
-        {fileHash && <p className="mt-2">File Hash: {fileHash}</p>}
+        <button onClick={() => switchNetwork("sepolia-testnet")} className="bg-blue-500 p-2 text-white">
+          Switch to Sepolia Testnet
+        </button>
+        <button onClick={() => switchNetwork("binance-testnet")} className="bg-blue-500 p-2 text-white">
+          Switch to Binance Testnet
+        </button>
+        <button onClick={() => switchNetwork("binance-mainnet")} className="bg-blue-500 p-2 text-white">
+          Switch to Binance Mainnet
+        </button>
       </div>
 
-      {/* Upload File Hash */}
       <div className="mt-4">
-        <h3 className="font-bold">Upload File Hash</h3>
-        <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="Enter User ID"
-          className="m-2 p-2 border"
-        />
-        <input
-          type="text"
-          value={fileHash}
-          onChange={(e) => setFileHash(e.target.value)}
-          placeholder="Enter File Hash"
-          className="m-2 p-2 border"
-        />
-        <button
-          onClick={uploadFileHash}
-          className="bg-purple-500 p-2 text-white"
-        >
-          Upload File Hash
+        <button onClick={showCurrentAccount} className="bg-purple-500 p-2 text-white">
+          Show Current Account
         </button>
       </div>
     </div>
