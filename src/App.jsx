@@ -9,42 +9,78 @@ const App = () => {
   const [balance, setBalance] = useState("");
 
   useEffect(() => {
-    if (window.ethereum) {
-      const initializeProvider = async () => {
-        try {
-          const newProvider = new BrowserProvider(window.ethereum);
-          setProvider(newProvider);
-
-          const signerInstance = await newProvider.getSigner();
-          setSigner(signerInstance);
-
-          const accounts = await newProvider.listAccounts();
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            updateBalance(accounts[0], newProvider);
-          }
-        } catch (error) {
-          console.error("Provider Initialization Error:", error);
-        }
-      };
-
-      initializeProvider();
-    } else {
+    if (!window.ethereum) {
       console.error("MetaMask not found.");
+      return;
     }
+  
+    const initializeProvider = async () => {
+      try {
+        const newProvider = new BrowserProvider(window.ethereum);
+        setProvider(newProvider);
+  
+        const signerInstance = await newProvider.getSigner();
+        setSigner(signerInstance);
+  
+        const accounts = await newProvider.listAccounts();
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          updateBalance(accounts[0], newProvider);
+        }
+      } catch (error) {
+        console.error("Provider Initialization Error:", error);
+      }
+    };
+  
+    initializeProvider();
+  
+    const handleNetworkChange = async (chainId) => {
+      console.log(`Network changed to: ${parseInt(chainId, 16)}`);
+  
+      const newProvider = new BrowserProvider(window.ethereum);
+      setProvider(newProvider);
+  
+      const accounts = await newProvider.listAccounts();
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+        updateBalance(accounts[0], newProvider);
+      }
+    };
+  
+    window.ethereum.on("chainChanged", handleNetworkChange);
+  
+    return () => {
+      window.ethereum.removeListener("chainChanged", handleNetworkChange);
+    };
   }, []);
-
+  
+  
   const updateBalance = useCallback(async (accountAddress, providerInstance) => {
-    if (!providerInstance) return;
-
+    if (!providerInstance || !accountAddress) return;
+  
     try {
+      console.log(`Fetching balance for account: ${accountAddress}`);
+  
+      const network = await providerInstance.getNetwork();
+      console.log(`Current Network: ${network.chainId}`);
+  
+      await new Promise((resolve) => setTimeout(resolve, 1000)); 
+  
+      const newNetwork = await providerInstance.getNetwork();
+      if (network.chainId !== newNetwork.chainId) {
+        console.warn("Network changed while fetching balance. Retrying...");
+        return; 
+      }
+  
       const balance = await providerInstance.getBalance(accountAddress);
       setBalance(formatEther(balance));
+  
+      console.log(`Balance updated: ${formatEther(balance)} ETH`);
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error("Error fetching balance:", error.message);
     }
   }, []);
-
+  
   const connectWallet = useCallback(async () => {
     if (!provider || !window.ethereum) return;
 
@@ -188,5 +224,4 @@ const App = () => {
     </div>
   );
 };
-
 export default App;
