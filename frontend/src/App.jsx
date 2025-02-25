@@ -198,49 +198,57 @@ const App = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="font-bold text-xl">Wallet Integration</h1>
-
-      {account ? (
-        <button onClick={disconnectWallet} className="bg-red-500 p-2 text-white">
-          Disconnect Wallet
-        </button>
-      ) : (
-        <button onClick={connectWallet} className="bg-green-500 p-2 text-white">
-          Connect Wallet
-        </button>
-      )}
-
-      <div className="space-x-2 mt-4">
-        <button onClick={() => switchNetwork("ethereum-mainnet")} className="bg-blue-500 p-2 text-white">
+    <div className="bg-gray-100 p-6 min-h-screen">
+      <h1 className="mb-6 font-bold text-2xl text-center">Wallet Integration</h1>
+  
+      <div className="flex justify-center mb-4">
+        {account ? (
+          <button onClick={disconnectWallet} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold text-white">
+            Disconnect Wallet
+          </button>
+        ) : (
+          <button onClick={connectWallet} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold text-white">
+            Connect Wallet
+          </button>
+        )}
+      </div>
+  
+      <div className="flex justify-center space-x-4 mb-4">
+        <button onClick={() => switchNetwork("ethereum-mainnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
           Switch to Ethereum Mainnet
         </button>
-        <button onClick={() => switchNetwork("sepolia-testnet")} className="bg-blue-500 p-2 text-white">
+        <button onClick={() => switchNetwork("sepolia-testnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
           Switch to Sepolia Testnet
         </button>
-        <button onClick={() => switchNetwork("binance-testnet")} className="bg-blue-500 p-2 text-white">
+        <button onClick={() => switchNetwork("binance-testnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
           Switch to Binance Testnet
         </button>
-        <button onClick={() => switchNetwork("binance-mainnet")} className="bg-blue-500 p-2 text-white">
+        <button onClick={() => switchNetwork("binance-mainnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
           Switch to Binance Mainnet
         </button>
       </div>
-
-      <button onClick={handleShowBalance} className="bg-orange-500 mt-2 p-2 text-white">
-        Show Balance
-      </button>
+  
+      <div className="flex justify-center mb-4">
+        <button onClick={handleShowBalance} className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded font-semibold text-white">
+          Show Balance
+        </button>
+      </div>
       {showBalance && (
-        <p className="mt-2">Balance: {balance} ETH</p>
+        <div className="mb-4 text-center">
+          <p className="font-medium text-lg">Balance: {balance} ETH</p>
+        </div>
       )}
-
-      <div className="mt-4">
-        <button onClick={handleShowDetail} className="bg-purple-500 p-2 text-white">
+  
+      <div className="flex justify-center">
+        <button onClick={handleShowDetail} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold text-white">
           Show Current Account Details
         </button>
-        {showDetail && (
-          <p className="mt-2 whitespace-pre-line">{accountDetails}</p>
-        )}
       </div>
+      {showDetail && (
+        <div className="mt-4 text-center">
+          <p className="font-medium text-lg whitespace-pre-line">{accountDetails}</p>
+        </div>
+      )}
     </div>
   );
 };
