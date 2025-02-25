@@ -7,21 +7,24 @@ const App = () => {
   const [signer, setSigner] = useState(null);
   const [account, setAccount] = useState("");
   const [balance, setBalance] = useState("");
+  const [showBalance, setShowBalance] = useState(false);
+  const [accountDetails, setAccountDetails] = useState("");
+  const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
     if (!window.ethereum) {
       console.error("MetaMask not found.");
       return;
     }
-  
+
     const initializeProvider = async () => {
       try {
         const newProvider = new BrowserProvider(window.ethereum);
         setProvider(newProvider);
-  
+
         const signerInstance = await newProvider.getSigner();
         setSigner(signerInstance);
-  
+
         const accounts = await newProvider.listAccounts();
         if (accounts.length > 0) {
           setAccount(accounts[0]);
@@ -31,56 +34,55 @@ const App = () => {
         console.error("Provider Initialization Error:", error);
       }
     };
-  
+
     initializeProvider();
-  
+
     const handleNetworkChange = async (chainId) => {
       console.log(`Network changed to: ${parseInt(chainId, 16)}`);
-  
+
       const newProvider = new BrowserProvider(window.ethereum);
       setProvider(newProvider);
-  
+
       const accounts = await newProvider.listAccounts();
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         updateBalance(accounts[0], newProvider);
       }
     };
-  
+
     window.ethereum.on("chainChanged", handleNetworkChange);
-  
+
     return () => {
       window.ethereum.removeListener("chainChanged", handleNetworkChange);
     };
   }, []);
-  
-  
+
   const updateBalance = useCallback(async (accountAddress, providerInstance) => {
     if (!providerInstance || !accountAddress) return;
-  
+
     try {
       console.log(`Fetching balance for account: ${accountAddress}`);
-  
+
       const network = await providerInstance.getNetwork();
       console.log(`Current Network: ${network.chainId}`);
-  
-      await new Promise((resolve) => setTimeout(resolve, 1000)); 
-  
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const newNetwork = await providerInstance.getNetwork();
       if (network.chainId !== newNetwork.chainId) {
         console.warn("Network changed while fetching balance. Retrying...");
-        return; 
+        return;
       }
-  
+
       const balance = await providerInstance.getBalance(accountAddress);
       setBalance(formatEther(balance));
-  
+
       console.log(`Balance updated: ${formatEther(balance)} ETH`);
     } catch (error) {
       console.error("Error fetching balance:", error.message);
     }
   }, []);
-  
+
   const connectWallet = useCallback(async () => {
     if (!provider || !window.ethereum) return;
 
@@ -102,6 +104,8 @@ const App = () => {
   const disconnectWallet = () => {
     setAccount("");
     setBalance("");
+    setShowBalance(false);
+    setShowDetail(false);
     console.log("Wallet disconnected");
   };
 
@@ -157,6 +161,8 @@ const App = () => {
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         updateBalance(accounts[0], provider);
+        setShowBalance(false);
+        setShowDetail(false);
       }
     } catch (error) {
       console.error("Error switching network:", error);
@@ -169,16 +175,27 @@ const App = () => {
 
     try {
       const accounts = await provider.listAccounts();
+      const network = await provider.getNetwork();
       if (accounts.length > 0) {
-        setAccount(accounts[0]);
-        updateBalance(accounts[0], provider);
+        setAccountDetails(`Current Network: ${network.name}`);
       } else {
-        alert("No account connected.");
+        setAccountDetails("No account connected.");
       }
     } catch (error) {
       console.error("Error fetching current account:", error);
     }
-  }, [provider, updateBalance]);
+  }, [provider]);
+
+  const handleShowBalance = () => {
+    // setShowBalance(true);
+    setShowBalance((prevShowBalance) => !prevShowBalance);
+  };
+
+  const handleShowDetail = () => {
+    showCurrentAccount();
+    setShowDetail((prevShowDetail) => !prevShowDetail);
+    // setShowDetail(true);
+  };
 
   return (
     <div className="p-4">
@@ -192,13 +209,6 @@ const App = () => {
         <button onClick={connectWallet} className="bg-green-500 p-2 text-white">
           Connect Wallet
         </button>
-      )}
-
-      {account && typeof account === "string" && (
-        <div className="mt-2">
-          <p>Connected Account: {account}</p>
-          <p>Balance: {balance} ETH</p>
-        </div>
       )}
 
       <div className="space-x-2 mt-4">
@@ -216,12 +226,23 @@ const App = () => {
         </button>
       </div>
 
+      <button onClick={handleShowBalance} className="bg-orange-500 mt-2 p-2 text-white">
+        Show Balance
+      </button>
+      {showBalance && (
+        <p className="mt-2">Balance: {balance} ETH</p>
+      )}
+
       <div className="mt-4">
-        <button onClick={showCurrentAccount} className="bg-purple-500 p-2 text-white">
-          Show Current Account
+        <button onClick={handleShowDetail} className="bg-purple-500 p-2 text-white">
+          Show Current Account Details
         </button>
+        {showDetail && (
+          <p className="mt-2 whitespace-pre-line">{accountDetails}</p>
+        )}
       </div>
     </div>
   );
 };
+
 export default App;
