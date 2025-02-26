@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatEther } from "ethers";
 import { BrowserProvider } from "ethers";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   const [provider, setProvider] = useState(null);
@@ -10,6 +13,10 @@ const App = () => {
   const [showBalance, setShowBalance] = useState(false);
   const [accountDetails, setAccountDetails] = useState("");
   const [showDetail, setShowDetail] = useState(false);
+  const [image, setImage] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [nfts, setNfts] = useState([]);
+
 
   useEffect(() => {
     if (!window.ethereum) {
@@ -55,6 +62,10 @@ const App = () => {
     return () => {
       window.ethereum.removeListener("chainChanged", handleNetworkChange);
     };
+  }, []);
+
+  useEffect(() => {
+    fetchNFTs();
   }, []);
 
   const updateBalance = useCallback(async (accountAddress, providerInstance) => {
@@ -197,7 +208,63 @@ const App = () => {
     // setShowDetail(true);
   };
 
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      return res.data.secure_url;
+    } catch (error) {
+      toast.error("Cloudinary upload failed!");
+      console.error(error);
+      return null;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let finalImageUrl = imageUrl;
+    if (image) {
+      const cloudinaryUrl = await uploadToCloudinary(image);
+      if (!cloudinaryUrl) return;
+      finalImageUrl = cloudinaryUrl;
+    }
+
+    if (!finalImageUrl) {
+      toast.error("Please provide an image or URL");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/mint`, {
+        tokenURI: finalImageUrl,
+      });
+      console.log("NFT saved:", response.data);
+      toast.success("NFT saved successfully!");
+      fetchNFTs(); 
+    } catch (error) {
+      toast.error("Failed to save NFT!");
+      console.error(error);
+    }
+  };
+
+  const fetchNFTs = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/nfts`);
+      setNfts(response.data);
+    } catch (error) {
+      console.error("Error fetching NFTs", error);
+    }
+  };
+
   return (
+    <>
     <div className="bg-gray-100 p-6 min-h-screen">
       <h1 className="mb-6 font-bold text-2xl text-center">Wallet Integration</h1>
   
@@ -250,6 +317,42 @@ const App = () => {
         </div>
       )}
     </div>
+     <div className="bg-gray-900 p-8 min-h-screen text-white">
+     <ToastContainer />
+     <h1 className="mb-4 font-bold text-3xl">NFT Minting Platform</h1>
+
+     <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg p-6 rounded-lg">
+       <label className="block mb-2 text-lg">Upload Image or Enter Image URL:</label>
+       <input
+         type="file"
+         accept="image/*"
+         onChange={(e) => setImage(e.target.files[0])}
+         className="bg-gray-700 mb-4 p-2 border border-gray-600 rounded w-full"
+       />
+       <input
+         type="text"
+         placeholder="Or enter image URL"
+         value={imageUrl}
+         onChange={(e) => setImageUrl(e.target.value)}
+         className="bg-gray-700 mb-4 p-2 border border-gray-600 rounded w-full"
+       />
+       <button type="submit" className="bg-blue-500 hover:bg-blue-600 p-2 rounded w-full">
+         Mint NFT
+       </button>
+     </form>
+
+     <h2 className="mt-6 mb-4 font-bold text-2xl">Minted NFTs</h2>
+     <div className="gap-4 grid grid-cols-1 md:grid-cols-3">
+       {nfts.map((nft) => (
+         <div key={nft._id} className="bg-gray-800 p-4 rounded-lg">
+           <img src={nft.tokenURI} alt="NFT" className="rounded w-full h-48 object-cover" />
+           <p className="mt-2 text-gray-400 text-sm">Token ID: {nft.tokenId}</p>
+           <p className="text-gray-400 text-sm">Owner: {nft.owner}</p>
+         </div>
+       ))}
+     </div>
+   </div>
+   </>
   );
 };
 
