@@ -18,8 +18,8 @@ router.post("/mint", async (req, res) => {
 
     const newNFT = new NFT({    
         tokenURI: tokenURI,
-        tokenId: Math.floor(Math.random() * 100000), // Generate random Token ID
-        owner: "0xUserWalletAddress", // Replace with actual user wallet logic
+        tokenId: Math.floor(Math.random() * 100000),
+        owner: "0xUserWalletAddress",
         txHash: tx.hash });
     await newNFT.save();
 

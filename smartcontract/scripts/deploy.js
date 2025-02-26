@@ -1,12 +1,12 @@
 const hre = require("hardhat");
 
 async function main() {
-  const NFTMint = await hre.ethers.getContractFactory("NFTMint"); // Load contract
-  const nftMint = await NFTMint.deploy(); // Deploy contract
+  const NFTMint = await hre.ethers.getContractFactory("NFTMint");
+  const nftMint = await NFTMint.deploy(); 
 
-  await nftMint.waitForDeployment(); // Ensure deployment is completed
+  await nftMint.waitForDeployment();
 
-  console.log("NFTMint deployed to:", await nftMint.getAddress()); // Print deployed contract address
+  console.log("NFTMint deployed to:", await nftMint.getAddress());
 }
 
 main().catch((error) => {

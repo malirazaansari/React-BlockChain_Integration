@@ -341,7 +341,6 @@ const App = () => {
       </div>
     )}
   </div>
-
   {/* NFT Minting Section */}
   <div className="bg-gray-900 p-12 min-h-screen text-white">
     <ToastContainer />
@@ -375,8 +374,7 @@ const App = () => {
       ))}
     </div>
   </div>
-</>
-
+  </>
   );
 };
 
