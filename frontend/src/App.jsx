@@ -264,95 +264,119 @@ const App = () => {
   };
 
   return (
-    <>
-    <div className="bg-gray-100 p-6 min-h-screen">
-      <h1 className="mb-6 font-bold text-2xl text-center">Wallet Integration</h1>
-  
-      <div className="flex justify-center mb-4">
-        {account ? (
-          <button onClick={disconnectWallet} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold text-white">
-            Disconnect Wallet
-          </button>
-        ) : (
-          <button onClick={connectWallet} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold text-white">
-            Connect Wallet
-          </button>
-        )}
-      </div>
-  
-      <div className="flex justify-center space-x-4 mb-4">
-        <button onClick={() => switchNetwork("ethereum-mainnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
-          Switch to Ethereum Mainnet
+  <>
+  <div className="bg-gray-50 p-8">
+    <h1 className="mb-8 font-bold text-gray-800 text-3xl text-center">Wallet Integration</h1>
+
+    <div className="flex justify-center mb-6">
+      {account ? (
+        <button
+          onClick={disconnectWallet}
+          className="bg-red-500 hover:bg-red-600 shadow-md px-5 py-3 rounded-lg font-semibold text-white transition-all"
+        >
+          Disconnect Wallet
         </button>
-        <button onClick={() => switchNetwork("sepolia-testnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
-          Switch to Sepolia Testnet
+      ) : (
+        <button
+          onClick={connectWallet}
+          className="bg-green-500 hover:bg-green-600 shadow-md px-5 py-3 rounded-lg font-semibold text-white transition-all"
+        >
+          Connect Wallet
         </button>
-        <button onClick={() => switchNetwork("binance-testnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
-          Switch to Binance Testnet
-        </button>
-        <button onClick={() => switchNetwork("binance-mainnet")} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-white">
-          Switch to Binance Mainnet
-        </button>
-      </div>
-  
-      <div className="flex justify-center mb-4">
-        <button onClick={handleShowBalance} className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded font-semibold text-white">
-          Show Balance
-        </button>
-      </div>
-      {showBalance && (
-        <div className="mb-4 text-center">
-          <p className="font-medium text-lg">Balance: {balance} ETH</p>
-        </div>
-      )}
-  
-      <div className="flex justify-center">
-        <button onClick={handleShowDetail} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold text-white">
-          Show Current Account Details
-        </button>
-      </div>
-      {showDetail && (
-        <div className="mt-4 text-center">
-          <p className="font-medium text-lg whitespace-pre-line">{accountDetails}</p>
-        </div>
       )}
     </div>
-     <div className="bg-gray-900 p-8 min-h-screen text-white">
-     <ToastContainer />
-     <h1 className="mb-4 font-bold text-3xl">NFT Minting Platform</h1>
 
-     <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg p-6 rounded-lg">
-       <label className="block mb-2 text-lg">Upload Image or Enter Image URL:</label>
-       <input
-         type="file"
-         accept="image/*"
-         onChange={(e) => setImage(e.target.files[0])}
-         className="bg-gray-700 mb-4 p-2 border border-gray-600 rounded w-full"
-       />
-       <input
-         type="text"
-         placeholder="Or enter image URL"
-         value={imageUrl}
-         onChange={(e) => setImageUrl(e.target.value)}
-         className="bg-gray-700 mb-4 p-2 border border-gray-600 rounded w-full"
-       />
-       <button type="submit" className="bg-blue-500 hover:bg-blue-600 p-2 rounded w-full">
-         Mint NFT
-       </button>
-     </form>
+    <div className="flex flex-wrap justify-center gap-4 mb-6">
+      <button
+        onClick={() => switchNetwork("ethereum-mainnet")}
+        className="bg-blue-600 hover:bg-blue-700 shadow-md px-4 py-2 rounded-lg font-semibold text-white transition-all"
+      >
+        Ethereum Mainnet
+      </button>
+      <button
+        onClick={() => switchNetwork("sepolia-testnet")}
+        className="bg-blue-600 hover:bg-blue-700 shadow-md px-4 py-2 rounded-lg font-semibold text-white transition-all"
+      >
+        Sepolia Testnet
+      </button>
+      <button
+        onClick={() => switchNetwork("binance-testnet")}
+        className="bg-blue-600 hover:bg-blue-700 shadow-md px-4 py-2 rounded-lg font-semibold text-white transition-all"
+      >
+        Binance Testnet
+      </button>
+      <button
+        onClick={() => switchNetwork("binance-mainnet")}
+        className="bg-blue-600 hover:bg-blue-700 shadow-md px-4 py-2 rounded-lg font-semibold text-white transition-all"
+      >
+        Binance Mainnet
+      </button>
+    </div>
 
-     <h2 className="mt-6 mb-4 font-bold text-2xl">Minted NFTs</h2>
-     <div className="gap-4 grid grid-cols-1 md:grid-cols-3">
-       {nfts.map((nft) => (
-         <div key={nft._id} className="bg-gray-800 p-4 rounded-lg">
-           <img src={nft.tokenURI} alt="NFT" className="rounded w-full h-48 object-cover" />
-           <p className="mt-2 text-gray-400 text-sm">Token ID: {nft.tokenId}</p>
-           <p className="text-gray-400 text-sm">Owner: {nft.owner}</p>
-         </div>
-       ))}
-     </div>
-   </div>
-   </>
+    <div className="flex justify-center mb-6">
+      <button
+        onClick={handleShowBalance}
+        className="bg-orange-500 hover:bg-orange-600 shadow-md px-5 py-3 rounded-lg font-semibold text-white transition-all"
+      >
+        Show Balance
+      </button>
+    </div>
+    {showBalance && (
+      <div className="mb-6 text-center">
+        <p className="font-semibold text-gray-800 text-xl">Balance: {balance} ETH</p>
+      </div>
+    )}
+
+    <div className="flex justify-center">
+      <button
+        onClick={handleShowDetail}
+        className="bg-purple-600 hover:bg-purple-700 shadow-md px-5 py-3 rounded-lg font-semibold text-white transition-all"
+      >
+        Show Account Details
+      </button>
+    </div>
+    {showDetail && (
+      <div className="bg-white shadow-lg mt-6 p-4 rounded-lg text-center">
+        <p className="font-medium text-gray-700 text-lg whitespace-pre-line">{accountDetails}</p>
+      </div>
+    )}
+  </div>
+
+  {/* NFT Minting Section */}
+  <div className="bg-gray-900 p-12 min-h-screen text-white">
+    <ToastContainer />
+    <h1 className="mb-6 font-bold text-4xl text-center">NFT Minting Platform</h1>
+
+    <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg mx-auto p-8 rounded-lg max-w-lg">
+      <label className="block mb-3 font-medium text-lg">Upload Image or Enter Image URL:</label>
+      <input
+        type="text"
+        placeholder="Enter image URL"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        className="bg-gray-700 mb-4 p-3 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+      />
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-600 shadow-md p-3 rounded-lg w-full font-semibold text-lg transition-all"
+      >
+        Mint NFT
+      </button>
+    </form>
+
+    <h2 className="mt-10 mb-6 font-bold text-3xl text-center">Minted NFTs</h2>
+    <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      {nfts.map((nft) => (
+        <div key={nft._id} className="bg-gray-800 shadow-lg hover:shadow-xl p-4 rounded-lg transition-all">
+          <img src={nft.tokenURI} alt="NFT" className="rounded w-full h-52 object-cover" />
+          <p className="mt-3 text-gray-300 text-sm">Token ID: {nft.tokenId}</p>
+          <p className="text-gray-300 text-sm">Owner: {nft.owner}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</>
+
   );
 };
 
