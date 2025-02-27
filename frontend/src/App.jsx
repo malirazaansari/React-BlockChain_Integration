@@ -16,6 +16,7 @@ const App = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [isMinting, setIsMinting] = useState(false);
   const [nfts, setNfts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
@@ -201,14 +202,12 @@ const App = () => {
   }, [provider]);
 
   const handleShowBalance = () => {
-    // setShowBalance(true);
     setShowBalance((prevShowBalance) => !prevShowBalance);
   };
 
   const handleShowDetail = () => {
     showCurrentAccount();
     setShowDetail((prevShowDetail) => !prevShowDetail);
-    // setShowDetail(true);
   };
 
   const uploadToCloudinary = async (file) => {
@@ -250,10 +249,25 @@ const App = () => {
       });
       console.log("NFT saved:", response.data);
       toast.success("NFT saved successfully!");
-      fetchNFTs(); 
+      fetchNFTs();
+      setImageUrl("");
     } catch (error) {
       toast.error("Failed to save NFT!");
       console.error(error);
+    }
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (isMinting) return; 
+
+    setIsMinting(true);
+    try {
+      await handleSubmit(e);
+    } catch (error) {
+      console.error("Minting failed:", error);
+    } finally {
+      setIsMinting(false);
     }
   };
 
@@ -276,7 +290,6 @@ const App = () => {
   const shortenHash = (hash) => {
     return hash ? `${hash.substring(0, 15)}...${hash.substring(hash.length - 4)}` : 'N/A';
   };
-
 
   return (
   <>
@@ -362,7 +375,7 @@ const App = () => {
       <ToastContainer />
       <h1 className="mb-6 font-bold text-4xl text-center">NFT Minting Platform</h1>
 
-      <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg mx-auto p-8 rounded-lg max-w-lg">
+      <form onSubmit={onSubmit} className="bg-gray-800 shadow-lg mx-auto p-8 rounded-lg max-w-lg">
         <label className="block mb-3 font-medium text-lg">Upload Image or Enter Image URL:</label>
         <input
           type="text"
@@ -373,9 +386,12 @@ const App = () => {
         />
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 shadow-md p-3 rounded-lg w-full font-semibold text-lg transition-all"
+          disabled={isMinting}
+          className={`p-3 rounded-lg w-full font-semibold text-lg transition-all ${
+          isMinting ? "bg-gray-500 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 shadow-md"
+        }`}
         >
-          Mint NFT
+          {isMinting ? "Minting..." : "Mint NFT"}
         </button>
       </form>
 
@@ -390,7 +406,6 @@ const App = () => {
         ))}
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-center mt-6">
         <Pagination
           current={currentPage}
@@ -400,7 +415,7 @@ const App = () => {
           showSizeChanger={false}
         />
       </div>
-    </div>
+  </div>
   </>
   );
 };
