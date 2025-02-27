@@ -4,6 +4,7 @@ import { BrowserProvider } from "ethers";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Pagination } from 'antd';
 
 const App = () => {
   const [provider, setProvider] = useState(null);
@@ -16,6 +17,8 @@ const App = () => {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [nfts, setNfts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
 
 
   useEffect(() => {
@@ -263,8 +266,21 @@ const App = () => {
     }
   };
 
+  const indexOfLastNFT = currentPage * pageSize;
+  const indexOfFirstNFT = indexOfLastNFT - pageSize;
+  const currentNFTs = nfts.slice(indexOfFirstNFT, indexOfLastNFT);
+
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString(); 
+  };
+  const shortenHash = (hash) => {
+    return hash ? `${hash.substring(0, 15)}...${hash.substring(hash.length - 4)}` : 'N/A';
+  };
+
+
   return (
   <>
+  {/* BlockChain Accounts Connection */}
   <div className="bg-gray-50 p-8">
     <h1 className="mb-8 font-bold text-gray-800 text-3xl text-center">Wallet Integration</h1>
 
@@ -341,39 +357,50 @@ const App = () => {
       </div>
     )}
   </div>
-  {/* NFT Minting Section */}
+  {/*NFT Mint*/}
   <div className="bg-gray-900 p-12 min-h-screen text-white">
-    <ToastContainer />
-    <h1 className="mb-6 font-bold text-4xl text-center">NFT Minting Platform</h1>
+      <ToastContainer />
+      <h1 className="mb-6 font-bold text-4xl text-center">NFT Minting Platform</h1>
 
-    <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg mx-auto p-8 rounded-lg max-w-lg">
-      <label className="block mb-3 font-medium text-lg">Upload Image or Enter Image URL:</label>
-      <input
-        type="text"
-        placeholder="Enter image URL"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        className="bg-gray-700 mb-4 p-3 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-      />
-      <button
-        type="submit"
-        className="bg-blue-500 hover:bg-blue-600 shadow-md p-3 rounded-lg w-full font-semibold text-lg transition-all"
-      >
-        Mint NFT
-      </button>
-    </form>
+      <form onSubmit={handleSubmit} className="bg-gray-800 shadow-lg mx-auto p-8 rounded-lg max-w-lg">
+        <label className="block mb-3 font-medium text-lg">Upload Image or Enter Image URL:</label>
+        <input
+          type="text"
+          placeholder="Enter image URL"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          className="bg-gray-700 mb-4 p-3 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 shadow-md p-3 rounded-lg w-full font-semibold text-lg transition-all"
+        >
+          Mint NFT
+        </button>
+      </form>
 
-    <h2 className="mt-10 mb-6 font-bold text-3xl text-center">Minted NFTs</h2>
-    <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {nfts.map((nft) => (
-        <div key={nft._id} className="bg-gray-800 shadow-lg hover:shadow-xl p-4 rounded-lg transition-all">
-          <img src={nft.tokenURI} alt="NFT" className="rounded w-full h-52 object-cover" />
-          <p className="mt-3 text-gray-300 text-sm">Token ID: {nft.tokenId}</p>
-          <p className="text-gray-300 text-sm">Owner: {nft.owner}</p>
-        </div>
-      ))}
+      <h2 className="mt-10 mb-6 font-bold text-3xl text-center">Minted NFTs</h2>
+      <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+        {currentNFTs.map((nft) => (
+          <div key={nft._id} className="bg-gray-800 shadow-lg hover:shadow-xl p-4 rounded-lg transition-all">
+            <img src={nft.tokenURI} alt="NFT" className="rounded w-full h-52 object-cover" />
+            <p className="mt-3 text-gray-300 text-sm">Token Hash: {shortenHash(nft.txHash)}</p>
+            <p className="text-gray-300 text-sm">Minted At: {formatDate(nft.mintedAt)}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-6">
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={nfts.length}
+          onChange={(page) => setCurrentPage(page)}
+          showSizeChanger={false}
+        />
+      </div>
     </div>
-  </div>
   </>
   );
 };
