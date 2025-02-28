@@ -27,9 +27,9 @@ console.log("Contract Instance:", contract);
 
 export { contract };
 
-app.use(express.static("../frontend/dist"));
+app.use(express.static("./frontend/dist"));
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+  res.sendFile(path.resolve(__dirname, "./frontend", "dist", "index.html"));
 });
 
 app.listen(5000, () => console.log("Server running on port 5000"));
