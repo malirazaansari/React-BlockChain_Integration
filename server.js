@@ -12,14 +12,16 @@ app.use(cors());
 app.use("/api", router);
 
 mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
 const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_API_KEY);
-const wallet  = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 console.log("Private Key:", process.env.PRIVATE_KEY);
-
 
 const contractAddress = "0x126aA9e42d2fE23C0B5306844914f6DDf1bB63bC";
 const contract = new ethers.Contract(contractAddress, contractABI.abi, wallet);
