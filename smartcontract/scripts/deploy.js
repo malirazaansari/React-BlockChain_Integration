@@ -2,7 +2,7 @@ const hre = require("hardhat");
 
 async function main() {
   const NFTMint = await hre.ethers.getContractFactory("NFTMint");
-  const nftMint = await NFTMint.deploy(); 
+  const nftMint = await NFTMint.deploy();
 
   await nftMint.waitForDeployment();
 
